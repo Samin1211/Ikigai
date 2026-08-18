@@ -8,9 +8,32 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final emailFocusNode = FocusNode();
+  bool emailFocused = false;
+
   static const Color lightPurple = Color(0xFFF4EAFF);
   static const Color darkPurple = Color(0xFF362E4B);
   static const Color grayPurple = Color(0xFF645A7A);
+  static const Color purpleBorderLight = Color(0x59645887);
+  static const Color purpleBorderDark = Color(0xBF645887);
+  static const Color whiteBackgroundLight = Color(0x66FEF7FF);
+  static const Color whiteBackgroundDark = Color(0xD9FEF7FF);
+
+  @override
+  void initState() {
+    super.initState();
+    emailFocusNode.addListener(() {
+      setState(() => emailFocused = emailFocusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    emailFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +63,7 @@ class _LoginPageState extends State<LoginPage> {
                       filterQuality: FilterQuality.high,
                     ),
                   ),
+
                   const Text(
                     'Welcome Back',
                     textAlign: TextAlign.center,
@@ -61,11 +85,85 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
+
+                  buildInputField(
+                    focusNode: emailFocusNode,
+                    controller: emailController,
+                    isFocused: emailFocused,
+                    hintText: 'Email Address',
+                    prefixIcon: Icons.email_outlined,
+                  ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget buildInputField({
+    required FocusNode focusNode,
+    required TextEditingController controller,
+    required bool isFocused,
+    required String hintText,
+    required IconData prefixIcon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      height: 48,
+      decoration: BoxDecoration(
+        color: isFocused ? whiteBackgroundDark : whiteBackgroundLight,
+        borderRadius: BorderRadius.circular(9999),
+        border: Border.all(
+          color: isFocused ? purpleBorderDark : purpleBorderLight,
+          width: isFocused ? 2.0 : 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 20),
+          Icon(
+            prefixIcon,
+            size: 20,
+            color: grayPurple,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              focusNode: focusNode,
+              controller: controller,
+              obscureText: obscureText,
+              keyboardType: keyboardType,
+              style: const TextStyle(
+                fontSize: 15,
+                color: darkPurple,
+              ),
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: const TextStyle(
+                  fontSize: 15,
+                  color: grayPurple,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          if (suffixIcon != null) ...[
+            const SizedBox(width: 8),
+            suffixIcon,
+          ],
+          const SizedBox(width: 20),
+        ],
       ),
     );
   }
