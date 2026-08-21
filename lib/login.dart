@@ -23,6 +23,10 @@ class _LoginPageState extends State<LoginPage> {
   static const Color purpleBorderDark = Color(0xBF645887);
   static const Color whiteBackgroundLight = Color(0x66FEF7FF);
   static const Color whiteBackgroundDark = Color(0xD9FEF7FF);
+  static const Color purple = Color(0xFF645887);
+  static const Color blue = Color(0xFF5743DF);
+  static const Color white = Color(0xFFFDF7FF);
+  static const Color purpleShadow = Color(0x40645887);
 
   @override
   void initState() {
@@ -122,9 +126,81 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: GestureDetector(
+                        onTap: () {},
+                        child: const Text(
+                          'Forgot password?',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.5,
+                            color: purple,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  buildLoginButton(),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildLoginButton() {
+    return Container(
+      width: double.infinity,
+      height: 48,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [purple, blue],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(9999),
+        boxShadow: const [
+          BoxShadow(
+            color: purpleShadow,
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(9999),
+          onTap: () {},
+          child: const Stack(
+            alignment: Alignment.center,
+            children: [
+              Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.5,
+                  color: white,
+                ),
+              ),
+              Positioned(
+                right: 20,
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: 18,
+                  color: white,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -186,10 +262,14 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          if (suffixIcon != null) ...[
-            const SizedBox(width: 8),
-            suffixIcon,
-          ],
+          if (suffixIcon != null)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 8),
+                suffixIcon,
+              ],
+            ),
           const SizedBox(width: 20),
         ],
       ),
