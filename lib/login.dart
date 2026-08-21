@@ -8,9 +8,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool hidePassword = true;
   final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   final emailFocusNode = FocusNode();
+  final passwordFocusNode = FocusNode();
   bool emailFocused = false;
+  bool passwordFocused = false;
 
   static const Color lightPurple = Color(0xFFF4EAFF);
   static const Color darkPurple = Color(0xFF362E4B);
@@ -26,12 +30,17 @@ class _LoginPageState extends State<LoginPage> {
     emailFocusNode.addListener(() {
       setState(() => emailFocused = emailFocusNode.hasFocus);
     });
+    passwordFocusNode.addListener(() {
+      setState(() => passwordFocused = passwordFocusNode.hasFocus);
+    });
   }
 
   @override
   void dispose() {
     emailController.dispose();
+    passwordController.dispose();
     emailFocusNode.dispose();
+    passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -63,7 +72,6 @@ class _LoginPageState extends State<LoginPage> {
                       filterQuality: FilterQuality.high,
                     ),
                   ),
-
                   const Text(
                     'Welcome Back',
                     textAlign: TextAlign.center,
@@ -86,13 +94,33 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   buildInputField(
                     focusNode: emailFocusNode,
                     controller: emailController,
                     isFocused: emailFocused,
                     hintText: 'Email Address',
                     prefixIcon: Icons.email_outlined,
+                  ),
+                  const SizedBox(height: 12),
+                  buildInputField(
+                    focusNode: passwordFocusNode,
+                    controller: passwordController,
+                    isFocused: passwordFocused,
+                    hintText: 'Password',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: hidePassword,
+                    suffixIcon: GestureDetector(
+                      onTap: () {
+                        setState(() => hidePassword = !hidePassword);
+                      },
+                      child: Icon(
+                        hidePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: grayPurple,
+                      ),
+                    ),
                   ),
                 ],
               ),
