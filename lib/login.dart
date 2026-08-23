@@ -27,6 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   static const Color blue = Color(0xFF5743DF);
   static const Color white = Color(0xFFFDF7FF);
   static const Color purpleShadow = Color(0x40645887);
+  static const Color purpleUnderline = Color(0x4D645887);
 
   @override
   void initState() {
@@ -147,6 +148,42 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 12),
                   buildLoginButton(),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'New to Ikigai? ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: grayPurple,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/register');
+                        },
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: purpleUnderline,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          child: const Text(
+                            'Start your journey',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: purple,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
