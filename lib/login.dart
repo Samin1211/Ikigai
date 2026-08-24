@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final passwordFocusNode = FocusNode();
   bool emailFocused = false;
   bool passwordFocused = false;
+  String? emailError;
 
   static const Color lightPurple = Color(0xFFF4EAFF);
   static const Color darkPurple = Color(0xFF362E4B);
@@ -28,6 +29,7 @@ class _LoginPageState extends State<LoginPage> {
   static const Color white = Color(0xFFFDF7FF);
   static const Color purpleShadow = Color(0x40645887);
   static const Color purpleUnderline = Color(0x4D645887);
+  static const Color orange = Color(0xFFE65100);
 
   @override
   void initState() {
@@ -37,6 +39,9 @@ class _LoginPageState extends State<LoginPage> {
     });
     passwordFocusNode.addListener(() {
       setState(() => passwordFocused = passwordFocusNode.hasFocus);
+    });
+    emailController.addListener(() {
+      if (emailError != null) setState(() => emailError = null);
     });
   }
 
@@ -92,10 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Text(
                       'Enter your details to access your sanctuary.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: grayPurple,
-                      ),
+                      style: TextStyle(fontSize: 14, color: grayPurple),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -106,6 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: 'Email Address',
                     prefixIcon: Icons.email_outlined,
                   ),
+                  if (emailError != null) buildErrorMessage(emailError!),
                   const SizedBox(height: 12),
                   buildInputField(
                     focusNode: passwordFocusNode,
@@ -154,10 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       const Text(
                         'New to Ikigai? ',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: grayPurple,
-                        ),
+                        style: TextStyle(fontSize: 13, color: grayPurple),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -205,18 +205,16 @@ class _LoginPageState extends State<LoginPage> {
         ),
         borderRadius: BorderRadius.circular(9999),
         boxShadow: const [
-          BoxShadow(
-            color: purpleShadow,
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
+          BoxShadow(color: purpleShadow, blurRadius: 24, offset: Offset(0, 8)),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(9999),
-          onTap: () {},
+          onTap: () {
+            if (!validateEmail()) return;
+          },
           child: const Stack(
             alignment: Alignment.center,
             children: [
@@ -231,15 +229,76 @@ class _LoginPageState extends State<LoginPage> {
               ),
               Positioned(
                 right: 20,
-                child: Icon(
-                  Icons.arrow_forward,
-                  size: 18,
-                  color: white,
-                ),
+                child: Icon(Icons.arrow_forward, size: 18, color: white),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  bool validateEmail() {
+    final email = emailController.text.trim();
+    String? error;
+
+    if (email.isEmpty) {
+      error = 'Please enter your email address.';
+    } else if (RegExp(r'^[A-Z]').hasMatch(email)) {
+      error = 'Email must start with a lowercase letter.';
+    } else if (!email.contains('@')) {
+      error = "Please include an '@' in the email address.";
+    } else {
+      final parts = email.split('@');
+      if (parts[0].isEmpty) {
+        error = "Please enter a part before '@'.";
+      } else if (parts[1].isEmpty) {
+        error = "Please enter a part followed by '@'. Email is incomplete.";
+      } else if (!parts[1].contains('.') ||
+          parts[1].endsWith('.') ||
+          parts[1].startsWith('.')) {
+        error = "Email after '@' is incomplete.";
+      }
+    }
+
+    if (error != null) {
+      setState(() => emailError = error);
+      return false;
+    }
+    return true;
+  }
+
+  Widget buildErrorMessage(String message) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, left: 16, right: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color: orange,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Center(
+              child: Text(
+                '!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 12, color: darkPurple),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -269,11 +328,7 @@ class _LoginPageState extends State<LoginPage> {
       child: Row(
         children: [
           const SizedBox(width: 20),
-          Icon(
-            prefixIcon,
-            size: 20,
-            color: grayPurple,
-          ),
+          Icon(prefixIcon, size: 20, color: grayPurple),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -281,16 +336,10 @@ class _LoginPageState extends State<LoginPage> {
               controller: controller,
               obscureText: obscureText,
               keyboardType: keyboardType,
-              style: const TextStyle(
-                fontSize: 15,
-                color: darkPurple,
-              ),
+              style: const TextStyle(fontSize: 15, color: darkPurple),
               decoration: InputDecoration(
                 hintText: hintText,
-                hintStyle: const TextStyle(
-                  fontSize: 15,
-                  color: grayPurple,
-                ),
+                hintStyle: const TextStyle(fontSize: 15, color: grayPurple),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
@@ -302,10 +351,7 @@ class _LoginPageState extends State<LoginPage> {
           if (suffixIcon != null)
             Row(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(width: 8),
-                suffixIcon,
-              ],
+              children: [const SizedBox(width: 8), suffixIcon],
             ),
           const SizedBox(width: 20),
         ],
