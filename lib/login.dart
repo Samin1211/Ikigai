@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'transition_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -214,6 +215,10 @@ class _LoginPageState extends State<LoginPage> {
           borderRadius: BorderRadius.circular(9999),
           onTap: () {
             if (!validateEmail()) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TransitionScreen()),
+            );
           },
           child: const Stack(
             alignment: Alignment.center,

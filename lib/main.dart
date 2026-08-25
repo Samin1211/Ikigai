@@ -13,9 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.green),
-      ),
+      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.green)),
       home: const LoginPage(),
     );
   }
