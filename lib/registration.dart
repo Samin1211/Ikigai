@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegistrationPage> createState() => _RegistrationPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegistrationPageState extends State<RegistrationPage> {
   bool hidePassword = true;
+  bool hideConfirm = true;
   final formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmController = TextEditingController();
 
   static const Color lightPurple = Color(0xFFF4EAFF);
   static const Color darkPurple = Color(0xFF362E4B);
@@ -21,16 +24,18 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    confirmController.dispose();
     super.dispose();
   }
 
-  void onLoginPressed() {
+  void onSignUpPressed() {
     if (formKey.currentState!.validate()) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const TransitionScreen()),
+        MaterialPageRoute(builder: (_) => const SigningUpScreen()),
       );
     }
   }
@@ -63,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const Text(
-                    'Welcome Back',
+                    'Create Account',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w600,
@@ -72,11 +77,25 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Enter your details to access your sanctuary.',
+                    'Join us to begin your sanctuary journey.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: grayPurple),
                   ),
                   const SizedBox(height: 20),
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      hintText: 'Full Name',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your name.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -113,7 +132,34 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password.';
+                        return 'Please enter a password.';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: confirmController,
+                    obscureText: hideConfirm,
+                    decoration: InputDecoration(
+                      hintText: 'Confirm Password',
+                      prefixIcon: const Icon(Icons.lock_reset),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          hideConfirm
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => hideConfirm = !hideConfirm),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please confirm your password.';
+                      }
+                      if (value != passwordController.text) {
+                        return 'Passwords do not match.';
                       }
                       return null;
                     },
@@ -123,12 +169,12 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 48,
                     child: FilledButton(
-                      onPressed: onLoginPressed,
+                      onPressed: onSignUpPressed,
                       style: FilledButton.styleFrom(
                         backgroundColor: purple,
                         foregroundColor: white,
                       ),
-                      child: const Text('Login'),
+                      child: const Text('Sign Up'),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -136,19 +182,18 @@ class _LoginPageState extends State<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        'New to Ikigai? ',
+                        'Already have an account? ',
                         style: TextStyle(fontSize: 13, color: grayPurple),
                       ),
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/register'),
+                        onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: const Text(
-                          'Start your journey',
+                          'Log in',
                           style: TextStyle(fontSize: 13, color: purple),
                         ),
                       ),
@@ -164,14 +209,14 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class TransitionScreen extends StatefulWidget {
-  const TransitionScreen({super.key});
+class SigningUpScreen extends StatefulWidget {
+  const SigningUpScreen({super.key});
 
   @override
-  State<TransitionScreen> createState() => _TransitionScreenState();
+  State<SigningUpScreen> createState() => _SigningUpScreenState();
 }
 
-class _TransitionScreenState extends State<TransitionScreen> {
+class _SigningUpScreenState extends State<SigningUpScreen> {
   @override
   void initState() {
     super.initState();
@@ -179,7 +224,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LoginSuccessScreen()),
+          MaterialPageRoute(builder: (_) => const RegistrationSuccessScreen()),
         );
       }
     });
@@ -196,7 +241,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
             CircularProgressIndicator(color: Color(0xFF645887)),
             SizedBox(height: 24),
             Text(
-              'Logging in...',
+              'Signing up...',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -210,20 +255,21 @@ class _TransitionScreenState extends State<TransitionScreen> {
   }
 }
 
-class LoginSuccessScreen extends StatefulWidget {
-  const LoginSuccessScreen({super.key});
+class RegistrationSuccessScreen extends StatefulWidget {
+  const RegistrationSuccessScreen({super.key});
 
   @override
-  State<LoginSuccessScreen> createState() => _LoginSuccessScreenState();
+  State<RegistrationSuccessScreen> createState() =>
+      _RegistrationSuccessScreenState();
 }
 
-class _LoginSuccessScreenState extends State<LoginSuccessScreen> {
+class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
   @override
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
     });
   }
@@ -239,7 +285,7 @@ class _LoginSuccessScreenState extends State<LoginSuccessScreen> {
             Icon(Icons.check_circle, size: 64, color: Color(0xFF645887)),
             SizedBox(height: 24),
             Text(
-              'Login Successful',
+              'Registration Successful',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
