@@ -235,6 +235,21 @@ class PomodoroPageState extends State<PomodoroPage> {
 
           const SizedBox(height: 40),
 
+          AnimatedOpacity(
+            opacity: state==TimerState.stopped? 0:1,
+            duration: const Duration(milliseconds: 300),
+            child: Text(
+              state == TimerState.paused
+                  ? 'Tap to Resume, Hold to Stop'
+                  : 'Hold for 2s to Pause',
+              style: const TextStyle(
+                fontFamily: 'PlusJakartaSans',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: PomodoroColors.border,
+              ),
+            ),
+          ),
         ],
       ),
     );
