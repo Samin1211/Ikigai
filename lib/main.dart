@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'registration.dart';
 import 'splash_screen.dart';
 
 void main() {
@@ -23,7 +22,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const SplashScreen(),
-      routes: {'/register': (context) => const RegistrationPage()},
     );
   }
 }
