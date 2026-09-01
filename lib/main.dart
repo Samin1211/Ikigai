@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
 import 'registration.dart';
+import 'splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
-      home: const LoginPage(),
+      home: const SplashScreen(),
       routes: {'/register': (context) => const RegistrationPage()},
     );
   }
