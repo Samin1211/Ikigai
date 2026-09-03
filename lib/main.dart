@@ -39,13 +39,11 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  // Lightweight stubs for all 4 screens.
-  // We will replace these with real imports in the upcoming phases.
   static const _pages = <Widget>[
-    _PlaceholderPage(title: 'Home Placeholder'),   // 0 — HOME
-    _PlaceholderPage(title: 'Tasks Placeholder'),  // 1 — TASKS
-    _PlaceholderPage(title: 'Focus Placeholder'),  // 2 — FOCUS
-    _PlaceholderPage(title: 'Profile Placeholder'),// 3 — PROFILE
+    HomeScreen(),
+    _PlaceholderPage(title: 'Tasks Placeholder'),
+    _PlaceholderPage(title: 'Focus Placeholder'),
+    _PlaceholderPage(title: 'Profile Placeholder'),
   ];
 
   @override
