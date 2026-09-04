@@ -41,7 +41,6 @@ class _AppShellState extends State<AppShell> {
 
   static const _pages = <Widget>[
     HomeScreen(),
-    _PlaceholderPage(title: 'Tasks Placeholder'),
     _PlaceholderPage(title: 'Focus Placeholder'),
     _PlaceholderPage(title: 'Profile Placeholder'),
   ];
