@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
+import 'tasks_page.dart';
 
 void main() => runApp(const IkigaiApp());
 
@@ -41,6 +42,7 @@ class _AppShellState extends State<AppShell> {
 
   static const _pages = <Widget>[
     HomeScreen(),
+    TasksPage(),
     _PlaceholderPage(title: 'Focus Placeholder'),
     _PlaceholderPage(title: 'Profile Placeholder'),
   ];
