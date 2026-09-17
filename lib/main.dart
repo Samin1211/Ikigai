@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'tasks_page.dart';
 
+const _primary = Color(0xFF645887);
+const _bgColor = Color(0xFFFEF7FF);
+
 void main() => runApp(const IkigaiApp());
-
-
-const _primary      = Color(0xFF645887);
-const _bgColor      = Color(0xFFFEF7FF);
-const _surfaceColor = Color(0xFFF7F2FA);
-
 
 class IkigaiApp extends StatelessWidget {
   const IkigaiApp({super.key});
@@ -20,19 +17,15 @@ class IkigaiApp extends StatelessWidget {
       title: 'Ikigai',
       theme: ThemeData(
         scaffoldBackgroundColor: _bgColor,
-        colorScheme: ColorScheme.fromSeed(seedColor: _primary),
         primaryColor: _primary,
-        useMaterial3: true,
       ),
       home: const AppShell(),
     );
   }
 }
 
-// ─────────────────── APP SHELL ───────────────────
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
-
   @override
   State<AppShell> createState() => _AppShellState();
 }
@@ -43,70 +36,34 @@ class _AppShellState extends State<AppShell> {
   static const _pages = <Widget>[
     HomeScreen(),
     TasksPage(),
-    _PlaceholderPage(title: 'Focus Placeholder'),
-    _PlaceholderPage(title: 'Profile Placeholder'),
+    Center(child: Text('Focus', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _primary))),
+    Center(child: Text('Profile', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _primary))),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Ikigai',
-          style: TextStyle(color: _primary, fontWeight: FontWeight.bold, fontSize: 24),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: CircleAvatar(
-              backgroundColor: _surfaceColor,
-              child: const Icon(Icons.person_outline, color: _primary),
-            ),
-          ),
-        ],
+        title: const Text('Ikigai', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: _bgColor,
+        foregroundColor: _primary,
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
         backgroundColor: _bgColor,
         selectedItemColor: _primary,
-        unselectedItemColor: Colors.grey[400],
+        unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_filled),        label: 'HOME'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'HOME'),
           BottomNavigationBarItem(icon: Icon(Icons.check_circle_outline), label: 'TASKS'),
-          BottomNavigationBarItem(icon: Icon(Icons.center_focus_strong),  label: 'FOCUS'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline),     label: 'PROFILE'),
+          BottomNavigationBarItem(icon: Icon(Icons.center_focus_strong), label: 'FOCUS'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'PROFILE'),
         ],
-      ),
-    );
-  }
-}
-
-// ─────────────────── PLACEHOLDER PAGE ───────────────────
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-  const _PlaceholderPage({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: _primary.withOpacity(0.3), // Fallback if withValues() isn't supported yet
-        ),
       ),
     );
   }
