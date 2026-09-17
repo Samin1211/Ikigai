@@ -1,18 +1,21 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
-const _primary= Color(0xFF645887);
-const _darkText= Color(0xFF362E4B);
-const _bgColor= Color(0xFFFEF7FF);
+const _primary      = Color(0xFF645887);
+const _darkText     = Color(0xFF362E4B);
+const _bgColor      = Color(0xFFFEF7FF);
 const _surfaceColor = Color(0xFFF7F2FA);
-const _pill= BorderRadius.all(Radius.circular(9999));
+const _pill         = BorderRadius.all(Radius.circular(9999));
 
 class Task {
   final String title;
   bool isDone;
+  DateTime? dueDate;
 
   Task({
     required this.title,
     this.isDone = false,
+    this.dueDate,
   });
 }
 
@@ -27,22 +30,45 @@ class _TasksPageState extends State<TasksPage> {
   final List<Task> _tasks = [];
 
   void _markDone(Task task) {
-    setState(()=> _tasks.remove(task));
+    setState(() => _tasks.remove(task));
   }
 
-  BoxDecoration get _sheetDecoration=>const BoxDecoration(
+  void _addTask(String title, DateTime? dueDate) {
+    final task = Task(title: title, dueDate: dueDate);
+
+    if (dueDate != null) {
+      final duration = dueDate.difference(DateTime.now());
+
+      if (!duration.isNegative) {
+        Timer(duration, () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('⏰ Reminder: ${task.title}'),
+                backgroundColor: _primary,
+                behavior: SnackBarBehavior.floating,
+                shape: const RoundedRectangleBorder(borderRadius: _pill),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        });
+      }
+    }
+
+    setState(() {
+      _tasks.add(task);
+    });
+  }
+
+  BoxDecoration get _sheetDecoration => const BoxDecoration(
     color: _bgColor,
     borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
   );
 
-  void _addTask(String title) {
-    setState(() {
-      _tasks.add(Task(title: title));
-    });
-  }
-
   void _showAddTaskSheet() {
     String name = '';
+    DateTime? selectedDateTime;
 
     showModalBottomSheet(
       context: context,
@@ -68,47 +94,88 @@ class _TasksPageState extends State<TasksPage> {
                     style: const TextStyle(color: _darkText),
                     decoration: InputDecoration(
                       hintText: 'i.e. STUDY',
-                      hintStyle: TextStyle(color: _primary),
+                      hintStyle: const TextStyle(color: _primary),
                       filled: true,
                       fillColor: _surfaceColor,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(9999), borderSide: BorderSide.none),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+
+                  TextButton.icon(
+                    onPressed: () async {
+                      final pickedDate = await showDatePicker(
+                        context: ctx,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime(2030),
+                      );
+
+                      if (pickedDate != null && ctx.mounted) {
+                        final pickedTime = await showTimePicker(
+                          context: ctx,
+                          initialTime: TimeOfDay.now(),
+                        );
+
+                        if (pickedTime != null) {
+                          set(() {
+                            selectedDateTime = DateTime(
+                              pickedDate.year,
+                              pickedDate.month,
+                              pickedDate.day,
+                              pickedTime.hour,
+                              pickedTime.minute,
+                            );
+                          });
+                        }
+                      }
+                    },
+                    icon: Icon(
+                      selectedDateTime == null ? Icons.notifications_none : Icons.notifications_active,
+                      color: _primary,
+                    ),
+                    label: Text(
+                      selectedDateTime == null
+                          ? 'Set Reminder'
+                          : 'Due: ${selectedDateTime!.month}/${selectedDateTime!.day} at ${TimeOfDay.fromDateTime(selectedDateTime!).format(ctx)}',
+                      style: const TextStyle(color: _primary, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
                   Row(children: [
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: ()=>Navigator.pop(ctx),
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx),
                         style: OutlinedButton.styleFrom(
-                          padding:const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: _primary),
+                          shape: const RoundedRectangleBorder(borderRadius: _pill),
                         ),
-                        child: const Text('Cancel', style:TextStyle(color:_primary, fontWeight: FontWeight.bold)),
+                        child: const Text('Cancel', style: TextStyle(color: _primary, fontWeight: FontWeight.bold)),
                       ),
                     ),
-
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
                           if (name.isNotEmpty) {
-                            _addTask(name);
+                            _addTask(name, selectedDateTime);
                             Navigator.pop(ctx);
                           }
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           backgroundColor: _primary,
+                          shape: const RoundedRectangleBorder(borderRadius: _pill),
+                          elevation: 0,
                         ),
-
-
                         child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                       ),
-
                     ),
                   ]),
                 ],
-
               ),
             ),
           );
@@ -120,25 +187,47 @@ class _TasksPageState extends State<TasksPage> {
   Widget _buildTaskItem(Task task) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(color: _primary, borderRadius: _pill),
-      child: Row(children: [
-        GestureDetector(
-          onTap: () => _markDone(task),
-          child: Container(
-            width: 24,
-            height: 24,
+      child: Row(
+        children: [
+          Container(
+            width: 20,
+            height: 20,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(task.title, style: const TextStyle(color: Colors.white, fontSize: 16)),
-        ),
-      ]),
+          const SizedBox(width: 16),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  task.title,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                if (task.dueDate != null)
+                  Text(
+                    '${task.dueDate!.month}/${task.dueDate!.day} • ${TimeOfDay.fromDateTime(task.dueDate!).format(context)}',
+                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                  ),
+              ],
+            ),
+          ),
+
+          GestureDetector(
+            onTap: () => _markDone(task),
+            child: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(Icons.delete_outline, color: Colors.white, size: 22),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -158,13 +247,16 @@ class _TasksPageState extends State<TasksPage> {
             ),
             const SizedBox(height: 32),
 
-            if (_tasks.isNotEmpty)
-               ...[
-              Text('To-Do List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _darkText)),
+            if (_tasks.isNotEmpty) ...[
+              const Text('To-Do List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _darkText)),
               const SizedBox(height: 16),
-                 // for (final task in _tasks)
-                 //   _buildTaskItem(task),
-                 ListView.builder(itemBuilder: (context, index) => _buildTaskItem(_tasks[index]), itemCount: _tasks.length,)
+              Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: _tasks.length,
+                  itemBuilder: (context, index) => _buildTaskItem(_tasks[index]),
+                ),
+              ),
             ],
           ],
         ),
