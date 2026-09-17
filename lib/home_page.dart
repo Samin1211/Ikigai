@@ -25,14 +25,7 @@ class HomePage extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () => showProfileMenu(context),
-              child: const CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.black,
-                backgroundImage: AssetImage('assets/ikigai_logo.png'),
-              ),
-            ),
+            child: const ProfileMenuButton(),
           ),
         ],
       ),
