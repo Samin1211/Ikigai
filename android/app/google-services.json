@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "755659858659",
+    "project_id": "ikigai-a291d",
+    "storage_bucket": "ikigai-a291d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:755659858659:android:2f5b9f0ed1e5364bd5dbd6",
+        "android_client_info": {
+          "package_name": "com.example.ikigai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBc-dFfgBsRZ81bkA_jAOSS9USnxp6oDQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
