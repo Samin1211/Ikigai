@@ -76,7 +76,6 @@ class PomodoroPageState extends State<PomodoroPage> {
 
   void tapDown() {
     finishedHold = false;
-
     if (state == TimerState.running || state == TimerState.paused) {
       setState(() {
         holding = true;
@@ -148,15 +147,25 @@ class PomodoroPageState extends State<PomodoroPage> {
             color: PomodoroColors.base,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 24),
+            child: Icon(
+              Icons.account_circle_outlined,
+              color: PomodoroColors.base,
+              size: 30,
+            ),
+          ),
+        ],
       ),
 
       body: Column(
         children: [
           const SizedBox(height: 32),
           const Align(
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.topLeft,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+              padding: EdgeInsets.only(left: 24),
               child: Text(
                 'Focus\nSession.',
                 style: TextStyle(
@@ -190,9 +199,8 @@ class PomodoroPageState extends State<PomodoroPage> {
                   color: PomodoroColors.base_container,
                   boxShadow: [
                     BoxShadow(
-                      color: PomodoroColors.base.withValues(alpha: 0.2),
-                      blurRadius: 30,
-                      spreadRadius: 5,
+                      color: PomodoroColors.base_container2,
+                      blurRadius: 25,
                     )
                   ],
                 ),

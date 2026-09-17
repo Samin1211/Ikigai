@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ikigai/analytics_page.dart';
 import 'package:ikigai/pomodoro.dart';
 
 void main() {
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.green),
       ),
-      home: const PomodoroPage(),
+      home: InsightsPage()
     );
   }
 }
