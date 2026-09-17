@@ -1,3 +1,4 @@
+// ignore_for_file: constant_identifier_names
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -134,33 +135,9 @@ class PomodoroPageState extends State<PomodoroPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PomodoroColors.light_white1,
-      appBar: AppBar(
-        backgroundColor: PomodoroColors.light_white2,
-        elevation: 0,
-        titleSpacing: 24,
-        title: const Text(
-          'Ikigai',
-          style: TextStyle(
-            fontFamily: 'Epilogue',
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            color: PomodoroColors.base,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 24),
-            child: Icon(
-              Icons.account_circle_outlined,
-              color: PomodoroColors.base,
-              size: 30,
-            ),
-          ),
-        ],
-      ),
-
-      body: Column(
-        children: [
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
           const SizedBox(height: 32),
           const Align(
             alignment: Alignment.topLeft,
@@ -259,6 +236,7 @@ class PomodoroPageState extends State<PomodoroPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

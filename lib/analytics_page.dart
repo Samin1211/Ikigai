@@ -56,34 +56,6 @@ class InsightsPageState extends State<InsightsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: InsightsColors.white,
-
-      appBar: AppBar(
-        backgroundColor: InsightsColors.offwhite,
-        elevation: 0,
-        titleSpacing: 24,
-
-        title: const Text(
-          'Ikigai',
-          style: TextStyle(
-            fontFamily: 'Epilogue',
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            color: InsightsColors.lightpurple,
-          ),
-        ),
-
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 24),
-            child: Icon(
-              Icons.account_circle_outlined,
-              color: InsightsColors.lightpurple,
-              size: 30,
-            ),
-          ),
-        ],
-      ),
-
       body: Stack(
         children: [
 
