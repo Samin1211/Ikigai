@@ -213,7 +213,7 @@ class _TasksPageState extends State<TasksPage> {
                 if (task.dueDate != null)
                   Text(
                     '${task.dueDate!.month}/${task.dueDate!.day} • ${TimeOfDay.fromDateTime(task.dueDate!).format(context)}',
-                    style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
                   ),
               ],
             ),
