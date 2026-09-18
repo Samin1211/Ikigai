@@ -61,6 +61,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             'nickname': '',
             'age': '',
             'gender': '',
+            'dailyGoalHours': 6.0,
           });
       if (mounted) {
         Navigator.push(

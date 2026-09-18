@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class InsightsColors {
   static const Color lightpurple = Color(0xFF645887);
@@ -24,21 +27,9 @@ class InsightsPage extends StatefulWidget {
 }
 
 class InsightsPageState extends State<InsightsPage> {
-
-  double dailyGoalHours = 6.0;
   bool showStreakToast = false;
 
-  final List<double> weeklyHours = [
-    3.5,
-    4.2,
-    3.0,
-    5.0,
-    6.5,
-    4.0,
-    5.8,
-  ];
-
-  final List<String> weekDays = [
+  static const List<String> weekDays = [
     'Mon',
     'Tue',
     'Wed',
@@ -48,12 +39,38 @@ class InsightsPageState extends State<InsightsPage> {
     'Sun',
   ];
 
-  final double focusedHoursToday = 4.56;
-  final int streakDays = 3;
-  final double previousWeekTotal = 30.0;
-
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return _buildDashboard(const AnalyticsData.empty());
+    }
+
+    final userDocument = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid);
+    final sessions = userDocument.collection('focusSessions');
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: userDocument.snapshots(),
+      builder: (context, userSnapshot) {
+        final value = userSnapshot.data?.data()?['dailyGoalHours'];
+        final goal = value is num ? value.toDouble() : 6.0;
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: sessions.snapshots(),
+          builder: (context, sessionSnapshot) {
+            final data = _analyticsData(
+              sessionSnapshot.data?.docs ?? const [],
+              goal,
+            );
+            return _buildDashboard(data);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDashboard(AnalyticsData data) {
     return Scaffold(
       backgroundColor: InsightsColors.white,
       body: Stack(
@@ -85,33 +102,83 @@ class InsightsPageState extends State<InsightsPage> {
 
                 const SizedBox(height: 24),
 
-                buildPerformanceCard(),
+                buildPerformanceCard(data),
 
                 const SizedBox(height: 24),
 
-                buildFocusRingCard(),
+                buildFocusRingCard(data),
 
                 const SizedBox(height: 24),
 
-                buildActiveMinutesCard(),
+                buildActiveMinutesCard(data),
               ],
             ),
           ),
 
-          buildFloatingButtons(),
+          buildFloatingButtons(data),
         ],
       ),
     );
   }
 
-  Widget buildPerformanceCard() {
+  AnalyticsData _analyticsData(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> documents,
+    double dailyGoalHours,
+  ) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final currentMonday = today.subtract(Duration(days: today.weekday - DateTime.monday));
+    final nextMonday = currentMonday.add(const Duration(days: 7));
+    final previousMonday = currentMonday.subtract(const Duration(days: 7));
+    final weeklyHours = List<double>.filled(7, 0);
+    double focusedHoursToday = 0;
+    double previousWeekTotal = 0;
+    final activeDays = <DateTime>{};
+
+    for (final document in documents) {
+      final session = document.data();
+      final completedAt = session['completedAt'];
+      final duration = session['durationSeconds'];
+      if (completedAt is! Timestamp || duration is! num) continue;
+
+      final dateTime = completedAt.toDate();
+      final date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+      final hours = duration.toDouble() / 3600;
+      activeDays.add(date);
+
+      if (!date.isBefore(currentMonday) && date.isBefore(nextMonday)) {
+        weeklyHours[date.weekday - DateTime.monday] += hours;
+      }
+      if (!date.isBefore(previousMonday) && date.isBefore(currentMonday)) {
+        previousWeekTotal += hours;
+      }
+      if (date == today) focusedHoursToday += hours;
+    }
+
+    var streakDays = 0;
+    var streakDate = today;
+    while (activeDays.contains(streakDate)) {
+      streakDays++;
+      streakDate = streakDate.subtract(const Duration(days: 1));
+    }
+
+    return AnalyticsData(
+      dailyGoalHours: dailyGoalHours,
+      weeklyHours: weeklyHours,
+      focusedHoursToday: focusedHoursToday,
+      previousWeekTotal: previousWeekTotal,
+      streakDays: streakDays,
+    );
+  }
+
+  Widget buildPerformanceCard(AnalyticsData data) {
     double total = 0;
 
-    for (double hours in weeklyHours) {
+    for (double hours in data.weeklyHours) {
       total += hours;
     }
 
-    double difference = total - previousWeekTotal;
+    double difference = total - data.previousWeekTotal;
 
     String status = 'On Pace';
     String description = 'You are matching your weekly pace exactly.';
@@ -204,9 +271,9 @@ class InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget buildFocusRingCard() {
+  Widget buildFocusRingCard(AnalyticsData data) {
 
-    double progress = focusedHoursToday / dailyGoalHours;
+    double progress = data.focusedHoursToday / data.dailyGoalHours;
 
     if (progress > 1) {
       progress = 1;
@@ -260,7 +327,7 @@ class InsightsPageState extends State<InsightsPage> {
           Align(
             alignment: Alignment.topLeft,
             child: Text(
-              '${dailyGoalHours.round()}h Goal',
+              '${data.dailyGoalHours.round()}h Goal',
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 22,
@@ -330,18 +397,18 @@ class InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget buildActiveMinutesCard() {
+  Widget buildActiveMinutesCard(AnalyticsData data) {
 
     double totalHours = 0;
     double maxHours = 0;
     int peakIndex = 0;
 
-    for (int i = 0; i < weeklyHours.length; i++) {
+    for (int i = 0; i < data.weeklyHours.length; i++) {
 
-      totalHours += weeklyHours[i];
+      totalHours += data.weeklyHours[i];
 
-      if (weeklyHours[i] > maxHours) {
-        maxHours = weeklyHours[i];
+      if (data.weeklyHours[i] > maxHours) {
+        maxHours = data.weeklyHours[i];
         peakIndex = i;
       }
     }
@@ -413,15 +480,15 @@ class InsightsPageState extends State<InsightsPage> {
               crossAxisAlignment: CrossAxisAlignment.end,
 
               children: List.generate(
-                weeklyHours.length,
+                data.weeklyHours.length,
                     (i) {
                   double fraction = 0;
                   if (maxHours > 0) {
                     fraction =
-                        weeklyHours[i] / maxHours;
+                        data.weeklyHours[i] / maxHours;
                   }
                   bool isPeak =
-                      weeklyHours[i] == maxHours;
+                      data.weeklyHours[i] == maxHours;
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -460,7 +527,7 @@ class InsightsPageState extends State<InsightsPage> {
     );
   }
 
-  Widget buildFloatingButtons() {
+  Widget buildFloatingButtons(AnalyticsData data) {
     return Positioned(
       right: 25,
       bottom: 25,
@@ -479,7 +546,7 @@ class InsightsPageState extends State<InsightsPage> {
               ),
 
               child: Text(
-                "Congratulations!\nYou have $streakDays days streak!",
+                "Congratulations!\nYou have ${data.streakDays} days streak!",
                 style: const TextStyle(
                   fontSize: 14,
                   color: InsightsColors.darkpurple,
@@ -512,7 +579,7 @@ class InsightsPageState extends State<InsightsPage> {
 
           GestureDetector(
 
-            onTap: showGoalDialog,
+            onTap: () => showGoalDialog(data.dailyGoalHours),
 
             child: Container(
               width: 56,
@@ -554,8 +621,8 @@ class InsightsPageState extends State<InsightsPage> {
       );
     }
   }
-  void showGoalDialog() {
-    double tempGoal = dailyGoalHours;
+  void showGoalDialog(double currentGoal) {
+    double tempGoal = currentGoal;
 
     showDialog(
       context: context,
@@ -643,10 +710,15 @@ class InsightsPageState extends State<InsightsPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        dailyGoalHours = tempGoal;
-                      });
+                    onPressed: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(user.uid)
+                            .set({'dailyGoalHours': tempGoal}, SetOptions(merge: true));
+                      }
+                      if (!context.mounted) return;
                       Navigator.pop(context);
                     },
 
@@ -675,6 +747,29 @@ class InsightsPageState extends State<InsightsPage> {
       },
     );
   }
+}
+
+class AnalyticsData {
+  const AnalyticsData({
+    required this.dailyGoalHours,
+    required this.weeklyHours,
+    required this.focusedHoursToday,
+    required this.previousWeekTotal,
+    required this.streakDays,
+  });
+
+  const AnalyticsData.empty()
+      : dailyGoalHours = 6.0,
+        weeklyHours = const [0, 0, 0, 0, 0, 0, 0],
+        focusedHoursToday = 0,
+        previousWeekTotal = 0,
+        streakDays = 0;
+
+  final double dailyGoalHours;
+  final List<double> weeklyHours;
+  final double focusedHoursToday;
+  final double previousWeekTotal;
+  final int streakDays;
 }
 
 class FocusRingPainter extends CustomPainter {

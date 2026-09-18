@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 const _primary      = Color(0xFF645887);
@@ -8,15 +10,28 @@ const _surfaceColor = Color(0xFFF7F2FA);
 const _pill         = BorderRadius.all(Radius.circular(9999));
 
 class Task {
+  final String id;
   final String title;
   bool isDone;
   DateTime? dueDate;
 
   Task({
+    required this.id,
     required this.title,
     this.isDone = false,
     this.dueDate,
   });
+
+  factory Task.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
+    final data = document.data()!;
+    final dueDate = data['dueDate'];
+    return Task(
+      id: document.id,
+      title: data['title'] as String? ?? '',
+      isDone: data['isDone'] as bool? ?? false,
+      dueDate: dueDate is Timestamp ? dueDate.toDate() : null,
+    );
+  }
 }
 
 class TasksPage extends StatefulWidget {
@@ -27,38 +42,68 @@ class TasksPage extends StatefulWidget {
 }
 
 class _TasksPageState extends State<TasksPage> {
-  final List<Task> _tasks = [];
+  final Set<String> _scheduledReminderIds = {};
 
-  void _markDone(Task task) {
-    setState(() => _tasks.remove(task));
+  CollectionReference<Map<String, dynamic>>? get _tasksCollection {
+    final user = FirebaseAuth.instance.currentUser;
+    return user == null
+        ? null
+        : FirebaseFirestore.instance.collection('users').doc(user.uid).collection('tasks');
   }
 
-  void _addTask(String title, DateTime? dueDate) {
-    final task = Task(title: title, dueDate: dueDate);
-
-    if (dueDate != null) {
-      final duration = dueDate.difference(DateTime.now());
-
-      if (!duration.isNegative) {
-        Timer(duration, () {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('⏰ Reminder: ${task.title}'),
-                backgroundColor: _primary,
-                behavior: SnackBarBehavior.floating,
-                shape: const RoundedRectangleBorder(borderRadius: _pill),
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
-        });
+  Future<void> _markDone(Task task) async {
+    try {
+      await _tasksCollection?.doc(task.id).update({'isDone': true});
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not complete the task.')),
+        );
       }
     }
+  }
 
-    setState(() {
-      _tasks.add(task);
-    });
+  Future<void> _addTask(String title, DateTime? dueDate) async {
+    final collection = _tasksCollection;
+    if (collection == null) return;
+
+    try {
+      final document = await collection.add({
+        'title': title,
+        'dueDate': dueDate == null ? null : Timestamp.fromDate(dueDate),
+        'isDone': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      _scheduleReminder(Task(id: document.id, title: title, dueDate: dueDate));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not save the task.')),
+        );
+      }
+    }
+  }
+
+  void _scheduleReminder(Task task) {
+    if (!_scheduledReminderIds.add(task.id) || task.dueDate == null) return;
+
+    final duration = task.dueDate!.difference(DateTime.now());
+
+    if (!duration.isNegative) {
+      Timer(duration, () {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('⏰ Reminder: ${task.title}'),
+              backgroundColor: _primary,
+              behavior: SnackBarBehavior.floating,
+              shape: const RoundedRectangleBorder(borderRadius: _pill),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      });
+    }
   }
 
   BoxDecoration get _sheetDecoration => const BoxDecoration(
@@ -233,6 +278,7 @@ class _TasksPageState extends State<TasksPage> {
 
   @override
   Widget build(BuildContext context) {
+    final tasksCollection = _tasksCollection;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Padding(
@@ -247,17 +293,33 @@ class _TasksPageState extends State<TasksPage> {
             ),
             const SizedBox(height: 32),
 
-            if (_tasks.isNotEmpty) ...[
-              const Text('To-Do List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _darkText)),
-              const SizedBox(height: 16),
+            if (tasksCollection != null)
               Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) => _buildTaskItem(_tasks[index]),
+                child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                  stream: tasksCollection.where('isDone', isEqualTo: false).snapshots(),
+                  builder: (context, snapshot) {
+                    final tasks = snapshot.data?.docs.map(Task.fromDocument).toList() ?? [];
+                    for (final task in tasks) {
+                      _scheduleReminder(task);
+                    }
+                    if (tasks.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('To-Do List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _darkText)),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: tasks.length,
+                            itemBuilder: (context, index) => _buildTaskItem(tasks[index]),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
-            ],
           ],
         ),
       ),
