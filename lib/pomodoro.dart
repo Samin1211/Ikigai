@@ -1,5 +1,7 @@
 // ignore_for_file: constant_identifier_names
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class PomodoroColors {
@@ -47,12 +49,12 @@ class PomodoroPageState extends State<PomodoroPage> {
     timer = Timer.periodic(
       const Duration(seconds: 1),
           (context) {
-        if (seconds > 0) {
+        if (seconds > 1) {
           setState(() {
             seconds--;
           });
         } else {
-          stopTimer();
+          _finishSession(totalSeconds);
         }
       },
     );
@@ -66,13 +68,36 @@ class PomodoroPageState extends State<PomodoroPage> {
     });
   }
 
-  void stopTimer() {
+  Future<void> _finishSession(int durationSeconds) async {
     timer?.cancel();
 
     setState(() {
       state = TimerState.stopped;
       seconds = totalSeconds;
     });
+
+    if (durationSeconds <= 0) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('focusSessions')
+          .add({
+        'completedAt': Timestamp.fromDate(DateTime.now()),
+        'durationSeconds': durationSeconds,
+      });
+    } catch (_) {
+      // The timer has still ended even if the user is temporarily offline.
+    }
+  }
+
+  void stopTimer() {
+    final elapsedSeconds = totalSeconds - seconds;
+    _finishSession(elapsedSeconds);
   }
 
   void tapDown() {
@@ -120,6 +145,13 @@ class PomodoroPageState extends State<PomodoroPage> {
     if (state == TimerState.stopped || state == TimerState.paused) {
       startTimer();
     }
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    holdTimer?.cancel();
+    super.dispose();
   }
 
   String get time {

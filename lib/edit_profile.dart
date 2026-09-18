@@ -71,7 +71,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'nickname': nicknameController.text.trim(),
         'age': ageController.text.trim(),
         'gender': selectedGender ?? '',
-      });
+      }, SetOptions(merge: true));
     }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
